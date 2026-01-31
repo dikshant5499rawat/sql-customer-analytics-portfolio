@@ -47,7 +47,42 @@ with cte as (
   Where o.order_date::date between '2025-01-01' and '2025-12-31'
   )
 Select 
-  count(Case When order_counts>=2 then customer_id end)/count(customer_id)*100 as repeat_rate
+  100*count(Case When order_counts>=2 then customer_id else null end)/count(customer_id) as repeat_rate
 from cte;
   
-  
+-- Growth KPI's
+--month_on_month growth
+With monthly_sales as (
+  Select
+    DATE_TRUNC('month', o.order_date) AS month,
+    Round(Sum(oi.quantity*p.price),2) as revenue
+  From orders o
+  Left join order_items oi on o.order_id = oi.order_id
+  Left join products p on oi.product_id = p.product_id
+  Group by 1
+  )
+Select
+  month,
+  revenue,
+  round(100*(revenue - LAG(revenue) over(order by month))/LAG(revenue) over(order by month),2) as mom_growth
+From monthly_sales
+Order by month;
+
+-- New Vs Repeat Revenue in 2025
+with first_order as (
+  Select 
+    customer_id, 
+    min(order_date) as fod
+  From orders )
+Select
+  Case When o.order_date>f.fod then 'New_customer' Else 'Old_customer' End as customer_type,
+  Round(Sum(oi.quantity*p.price),2) as revenue
+From orders o
+left join first_order f on o.customer_id = f.customer_id
+Left join order_items oi on o.order_id = oi.order_id
+Left join products p on oi.product_id = p.product_id
+Where o.order_date::date between '2025-01-01' and '2025-12-31'
+Group by customer_type;
+
+
+

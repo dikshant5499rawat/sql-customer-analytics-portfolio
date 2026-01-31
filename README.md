@@ -2,6 +2,7 @@
 
 ## Business Problem
 The business wants to analyze customer behavior to understand:
+- Business KPI's: Revenue, Active Customers, Total Transactions, Unit Sols, AOV, AMS, AOPC, ABS
 - Customer churn, retention, and acquisition
 - Revenue trends over time
 - High-value customers and products
